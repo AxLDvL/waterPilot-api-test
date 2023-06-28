@@ -1,7 +1,7 @@
 version: '3'
 
 services:
-  database:
+  db:
     image: 'mysql:latest'
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-password}
@@ -9,7 +9,7 @@ services:
       MYSQL_USER: ${MYSQL_USER:-db_user}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:-db_user_pass}
     volumes:
-      - database_data:/var/lib/mysql
+      - db_data:/var/lib/mysql
 
   app:
     build: .
@@ -18,7 +18,7 @@ services:
     ports:
       - 8080:80
     depends_on:
-      - database
+      - db
 
 volumes:
-  database_data:
+  db_data:

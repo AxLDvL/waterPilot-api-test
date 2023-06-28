@@ -26,21 +26,24 @@ class RegistrationController extends AbstractController
         $this->emailVerifier = $emailVerifier;
     }
 
-    #[Route('/register', name: 'app_register')]
+    #[Route('/register', name: 'app_register', methods: ['POST'])]
     public function register(Request $request, UserPasswordHasherInterface $userPasswordHasher, EntityManagerInterface $entityManager): Response
     {
-        $user = new User();
-        $form = $this->createForm(RegistrationFormType::class, $user);
-        $form->handleRequest($request);
+        $data = json_decode($request->getContent(), true);
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            // encode the plain password
-            $user->setPassword(
-                $userPasswordHasher->hashPassword(
-                    $user,
-                    $form->get('plainPassword')->getData()
-                )
-            );
+        if (!isset($data['email']) || !isset($data['password'])) {
+            // Return a 400 Bad Request response if 'email' or 'password' is not provided
+            return new Response('Missing email or password', Response::HTTP_BAD_REQUEST);
+        }
+
+        $user = new User();
+        $user->setEmail($data['email']);
+        $user->setPassword(
+            $userPasswordHasher->hashPassword(
+                $user,
+                $data['password']
+            )
+        );
 
             $entityManager->persist($user);
             $entityManager->flush();
@@ -55,12 +58,10 @@ class RegistrationController extends AbstractController
             );
             // do anything else you need here, like send an email
 
-            return $this->redirectToRoute('_profiler_home');
-        }
+            
+        
 
-        return $this->render('registration/register.html.twig', [
-            'registrationForm' => $form->createView(),
-        ]);
+        return new Response('', Response::HTTP_CREATED);
     }
 
     #[Route('/verify/email', name: 'app_verify_email')]
@@ -69,27 +70,31 @@ class RegistrationController extends AbstractController
         $id = $request->query->get('id');
 
         if (null === $id) {
-            return $this->redirectToRoute('app_register');
+            // return $this->redirectToRoute('app_register');
+            return new Response('Invalid or missing user ID', Response::HTTP_BAD_REQUEST);
         }
 
         $user = $userRepository->find($id);
 
         if (null === $user) {
-            return $this->redirectToRoute('app_register');
+            // return $this->redirectToRoute('app_register');
+            return new Response('User not found', Response::HTTP_NOT_FOUND);
         }
 
         // validate email confirmation link, sets User::isVerified=true and persists
         try {
             $this->emailVerifier->handleEmailConfirmation($request, $user);
         } catch (VerifyEmailExceptionInterface $exception) {
-            $this->addFlash('verify_email_error', $translator->trans($exception->getReason(), [], 'VerifyEmailBundle'));
-
-            return $this->redirectToRoute('app_register');
+            // $this->addFlash('verify_email_error', $translator->trans($exception->getReason(), [], 'VerifyEmailBundle'));
+            // return $this->redirectToRoute('app_register');
+            return new Response($translator->trans($exception->getReason(), [], 'VerifyEmailBundle'), Response::HTTP_BAD_REQUEST);
         }
 
         // @TODO Change the redirect on success and handle or remove the flash message in your templates
-        $this->addFlash('success', 'Your email address has been verified.');
+        // $this->addFlash('success', 'Your email address has been verified.');
+        return new Response('Your email address has been verified.', Response::HTTP_OK);
 
-        return $this->redirectToRoute('app_register');
+        // return $this->redirectToRoute('app_register');
     }
+
 }
