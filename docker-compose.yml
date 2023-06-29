@@ -5,7 +5,7 @@ services:
     image: 'mysql:latest'
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-password}
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-app}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-apiDB}
       MYSQL_USER: ${MYSQL_USER:-db_user}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:-db_user_pass}
     volumes:

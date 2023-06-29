@@ -2,16 +2,12 @@
 
 namespace App\Entity;
 
-use ApiPlatform\Metadata\ApiResource;
 use App\Repository\UserRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
-#[ORM\Table(name: '`user`')]
-/** User. */
-#[ApiResource]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
@@ -31,14 +27,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private ?string $password = null;
 
-    #[ORM\Column(length: 255, nullable: true)]
-    private ?string $latitude = null;
-
-    #[ORM\Column(length: 255, nullable: true)]
-    private ?string $longitude = null;
-
-    #[ORM\Column(length: 255, nullable: true)]
-    private ?string $city = null;
+    #[ORM\OneToOne(cascade: ['persist', 'remove'])]
+    private ?Location $location = null;
 
     public function getId(): ?int
     {
@@ -110,38 +100,19 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         // $this->plainPassword = null;
     }
 
-    public function getLatitude(): ?string
+    public function getLocation(): ?Location
     {
-        return $this->latitude;
+        return $this->location;
     }
 
-    public function setLatitude(?string $latitude): static
+    public function setLocation(Location $location): static
     {
-        $this->latitude = $latitude;
+        // set the owning side of the relation if necessary
+        if ($location->getUser() !== $this) {
+            $location->setUser($this);
+        }
 
-        return $this;
-    }
-
-    public function getLongitude(): ?string
-    {
-        return $this->longitude;
-    }
-
-    public function setLongitude(?string $longitude): static
-    {
-        $this->longitude = $longitude;
-
-        return $this;
-    }
-
-    public function getCity(): ?string
-    {
-        return $this->city;
-    }
-
-    public function setCity(?string $city): static
-    {
-        $this->city = $city;
+        $this->location = $location;
 
         return $this;
     }

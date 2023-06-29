@@ -4,7 +4,9 @@ services:
 ###> doctrine/doctrine-bundle ###
   database:
     ports:
-      - "3306"
+      - target: 3306
+        published: 3306
+        protocol: tcp
 ###< doctrine/doctrine-bundle ###
 
 ###> symfony/mailer ###
